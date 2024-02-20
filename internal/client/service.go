@@ -1,15 +1,14 @@
 package client
 
 import (
-	"backend2/internal/client/db"
 	"context"
 )
 
 type Service struct {
-	r db.Repository
+	r repository
 }
 
-func (c *Service) NewClientService(r db.Repository) *Service {
+func NewClientService(r *Repository) *Service {
 	return &Service{
 		r,
 	}

@@ -20,13 +20,17 @@ const (
 
 type clientHandler struct {
 	logger *logging.Logger
-	s      *Service
+	srvc   *Service
+}
+
+func (c *clientHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	//TODO
 }
 
 func NewClientHandler(logger *logging.Logger, s *Service) handlers.Handler {
 	return &clientHandler{
 		logger: logger,
-		s:      s,
+		srvc:   s,
 	}
 }
 
@@ -35,7 +39,7 @@ func (c *clientHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(c.GetByID))
 	r.HandlerFunc(http.MethodPost, clientsURL, customerror.Middleware(c.Create))
 	r.HandlerFunc(http.MethodPut, clientsURL, customerror.Middleware(c.Update))
-	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(c.Delete))
+	r.HandlerFunc(http.MethodDelete, clientURL, customerror.Middleware(c.Delete))
 }
 
 func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
@@ -44,7 +48,7 @@ func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	limit, _ := strconv.Atoi(vars["limit"])
 	offset, _ := strconv.Atoi(vars["offset"])
 
-	all, err := c.s.FindAll(context.TODO(), limit, offset)
+	all, err := c.srvc.FindAll(context.TODO(), limit, offset)
 	if err != nil {
 		return err
 	}
@@ -71,7 +75,7 @@ func (c *clientHandler) GetByID(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	one, err := c.s.FindOne(context.TODO(), name, surname)
+	one, err := c.srvc.FindOne(context.TODO(), name, surname)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -101,7 +105,7 @@ func (c *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	cli, err := c.s.Create(context.TODO(), &cl)
+	cli, err := c.srvc.Create(context.TODO(), &cl)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -123,7 +127,7 @@ func (c *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	id := vars["id"]
 	addr := vars["address_id"]
 
-	err := c.s.Update(context.TODO(), id, addr)
+	err := c.srvc.Update(context.TODO(), id, addr)
 	if err != nil {
 		return err
 	}
@@ -140,7 +144,7 @@ func (c *clientHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	err := c.s.Delete(context.TODO(), id)
+	err := c.srvc.Delete(context.TODO(), id)
 	if err != nil {
 		return err
 	}

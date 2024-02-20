@@ -2,7 +2,9 @@ package server
 
 import (
 	"backend2/internal/config"
+	"backend2/internal/handlers"
 	"backend2/pkg/logging"
+	"context"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net"
@@ -25,7 +27,7 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-func (s *Server) Start(cfg *config.Config, rout *httprouter.Router) *http.Server {
+func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context.Context) *http.Server {
 	logger := logging.GetLogger()
 	logger.Info("start application")
 
@@ -55,13 +57,13 @@ func (s *Server) Start(cfg *config.Config, rout *httprouter.Router) *http.Server
 	}
 
 	serv := &http.Server{
-		Addr:         cfg.Listen.BindIP + cfg.Listen.Port,
-		Handler:      rout,
+		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}
 
 	s.serv = serv
 	logger.Fatal(serv.Serve(listener))
+	//logger.Fatal(serv.ListenAndServe())
 	return serv
 }
