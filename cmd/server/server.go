@@ -27,7 +27,7 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context.Context) *http.Server {
+func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context.Context) {
 	logger := logging.GetLogger()
 	logger.Info("start application")
 
@@ -65,5 +65,4 @@ func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context
 	s.serv = serv
 	logger.Fatal(serv.Serve(listener))
 	//logger.Fatal(serv.ListenAndServe())
-	return serv
 }

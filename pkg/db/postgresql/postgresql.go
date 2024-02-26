@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"backend2/internal/config"
+	"backend2/pkg/logging"
 	"context"
 	"fmt"
 	"github.com/jackc/pgconn"
@@ -53,4 +54,13 @@ func NewClient(ctx context.Context, maxAttempts int, sc config.StorageConfig) (*
 		log.Fatal("error do with tries postgresql")
 	}
 	return pool, nil
+}
+
+func CreateTable(query string, ctx context.Context, pool *pgxpool.Pool, logger *logging.Logger) error {
+	_, err := pool.Exec(ctx, query)
+	if err != nil {
+		logger.Errorf("Error: %v", err)
+		return err
+	}
+	return nil
 }

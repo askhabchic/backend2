@@ -1,0 +1,13 @@
+GET http://127.0.0.1:8000/clients
+Content-Type: application/json
+
+{}
+
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+###
