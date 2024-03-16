@@ -2,7 +2,6 @@ package server
 
 import (
 	"backend2/internal/config"
-	"backend2/internal/handlers"
 	"backend2/pkg/logging"
 	"context"
 	"fmt"
@@ -15,10 +14,6 @@ import (
 	"time"
 )
 
-type server interface {
-	Start(cfg *config.Config, rout *httprouter.Router) *http.Server
-}
-
 type Server struct {
 	serv *http.Server
 }
@@ -27,7 +22,7 @@ func NewServer() *Server {
 	return &Server{}
 }
 
-func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context.Context) {
+func (s *Server) Start(cfg *config.Config, handler *httprouter.Router, ctx context.Context) *http.Server {
 	logger := logging.GetLogger()
 	logger.Info("start application")
 
@@ -65,4 +60,5 @@ func (s *Server) Start(cfg *config.Config, handler handlers.Handler, ctx context
 	s.serv = serv
 	logger.Fatal(serv.Serve(listener))
 	//logger.Fatal(serv.ListenAndServe())
+	return serv
 }

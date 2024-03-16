@@ -2,17 +2,23 @@ package main
 
 import (
 	"backend2/cmd/server"
-	model2 "backend2/internal/address/model"
-	"backend2/internal/client/dao"
-	"backend2/internal/client/db"
+	addrDao "backend2/internal/address/dao"
+	addrDb "backend2/internal/address/db"
+	addrhandler "backend2/internal/address/handler"
+	modelAddress "backend2/internal/address/model"
+	clientDao "backend2/internal/client/dao"
+	cliDb "backend2/internal/client/db"
 	"backend2/internal/client/handler"
-	"backend2/internal/client/model"
+	modelClient "backend2/internal/client/model"
 	"backend2/internal/config"
 	"backend2/pkg/db/postgresql"
 	"backend2/pkg/logging"
 	"context"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/julienschmidt/httprouter"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -28,48 +34,63 @@ func main() {
 	logger.Infof("create server")
 	newServer := server.NewServer()
 
+	//channel for signals
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
 	//handlers
 	logger.Infof("create requests handler")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	logger.Infof("connect ot database")
-	cli, repo, err := connection(ctx, cfg, logger)
+	cli, err := connection(ctx, cfg, logger)
 	if err != nil {
 		logger.Errorf("Error: %v", err)
 	}
 	defer cli.Close()
 
 	logger.Infof("create Address table")
-	err = postgresql.CreateTable(model2.AddressTableQuery, ctx, cli, logger)
+	err = postgresql.CreateTable(modelAddress.AddressTableQuery, ctx, cli, logger)
 	if err != nil {
 		return
 	}
+
+	logger.Infof("create Address Service")
+	addRepo := addrDb.NewRepository(cli, logger)
+	addrDAO := addrDao.NewClientDAO(addRepo)
+
+	logger.Infof("create Address Handler")
+	addrHandler := addrhandler.NewAddressHandler(logger, addrDAO, ctx)
+	addrHandler.Register(router)
+
 	logger.Infof("create Client table")
-	err = postgresql.CreateTable(model.ClientTableQuery, ctx, cli, logger)
+	err = postgresql.CreateTable(modelClient.ClientTableQuery, ctx, cli, logger)
 	if err != nil {
 		return
 	}
 
 	logger.Infof("create Client Service")
-	clientDAO := dao.NewClientDAO(repo)
-	//service := client.NewClientService(repo)
+	clientRepo := cliDb.NewRepository(cli, logger)
+	clientDAO := clientDao.NewClientDAO(clientRepo)
 
 	logger.Infof("create Client Handler")
-	handler := handler.NewClientHandler(logger, clientDAO)
-	handler.Register(router)
+	clientHandler := handler.NewClientHandler(logger, clientDAO, ctx)
+	clientHandler.Register(router)
 
 	logger.Infof("start server")
-	newServer.Start(cfg, handler, ctx)
+	newServer.Start(cfg, router, ctx)
+
+	sig := <-signalCh
+	logger.Infof("received signal: %v/n", sig)
 }
 
-func connection(ctx context.Context, cfg *config.Config, logger *logging.Logger) (*pgxpool.Pool, *db.Repository, error) {
+func connection(ctx context.Context, cfg *config.Config, logger *logging.Logger) (*pgxpool.Pool, error) {
 	cli, err := postgresql.NewClient(ctx, 5, cfg.Storage)
 	if err != nil {
 		logger.Errorf("Error: %v", err)
-		return nil, nil, err
+		return nil, err
 	}
-	repository := db.NewRepository(cli, logger)
 	logger.Infof("connection to %s is established", cfg.Storage.Database)
-	return cli, repository, nil
+	return cli, nil
 }

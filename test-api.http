@@ -1,4 +1,4 @@
-GET http://127.0.0.1:8000/clients
+GET http://127.0.0.1:8000/api/clients
 Content-Type: application/json
 
 {}

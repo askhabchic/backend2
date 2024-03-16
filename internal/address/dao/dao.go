@@ -40,12 +40,12 @@ func (c *DAO) FindAll(ctx context.Context, limit, offset int) ([]model.Address, 
 	return all, nil
 }
 
-func (c *DAO) Update(ctx context.Context, id, addr string) error {
-	err := c.repo.Update(ctx, id, addr)
+func (c *DAO) Update(ctx context.Context, id string, addr *model.Address) (*model.Address, error) {
+	updatedAddress, err := c.repo.Update(ctx, id, addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return updatedAddress, nil
 }
 
 func (c *DAO) Delete(ctx context.Context, id string) error {

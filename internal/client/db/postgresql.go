@@ -5,16 +5,9 @@ import (
 	"backend2/pkg/logging"
 	"context"
 	"fmt"
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
-
-type repository interface {
-	Create(ctx context.Context, cl *model.Client) (*model.Client, error)
-	FindOne(ctx context.Context, name, surname string) (*model.Client, error)
-	FindAll(ctx context.Context, limit, offset int) ([]model.Client, error)
-	Update(ctx context.Context, id, addr string) error
-	Delete(ctx context.Context, id string) error
-}
 
 type Repository struct {
 	psgr   *pgxpool.Pool
@@ -29,10 +22,14 @@ func NewRepository(client *pgxpool.Pool, logger *logging.Logger) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, cl *model.Client) (*model.Client, error) {
-	q := `INSERT INTO client (client_name, client_surname, birthday, gender, registration_date, address_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	q := `INSERT INTO client (id, client_name, client_surname, birthday, gender, registration_date, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	var id, err = uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 
 	r.logger.Trace(fmt.Sprintf("SQL Query: %s", q))
-	err := r.psgr.QueryRow(ctx, q, cl.Name, cl.Surname, cl.Birthday,
+	err = r.psgr.QueryRow(ctx, q, id, cl.Name, cl.Surname, cl.Birthday,
 		cl.Gender, cl.RegistrationDate, cl.AddressId).Scan(&cl.ID)
 	if err != nil {
 		return &model.Client{}, err
@@ -43,13 +40,14 @@ func (r *Repository) Create(ctx context.Context, cl *model.Client) (*model.Clien
 func (r *Repository) FindAll(ctx context.Context, limit, offset int) (cls []model.Client, err error) {
 	q := `SELECT id, client_name, client_surname, birthday, gender, registration_date, address_id FROM public.client`
 	if limit != 0 {
-		q = fmt.Sprintf(q + ` LIMIT $1`)
+		q = fmt.Sprintf(q+` LIMIT %d`, limit)
 	}
 	if offset != 0 {
-		q = fmt.Sprintf(q + ` OFFSET $2`)
+		q = fmt.Sprintf(q+` OFFSET %d`, offset)
 	}
 	r.logger.Trace(fmt.Sprintf("SQL Query: %s", q))
-	rows, err := r.psgr.Query(ctx, q, limit, offset)
+	rows, err := r.psgr.Query(ctx, q)
+
 	if err != nil {
 		return nil, err
 	}
