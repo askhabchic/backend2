@@ -1,6 +1,7 @@
 package handler
 
 import (
+	addrModel "backend2/internal/address/model"
 	"backend2/internal/client/dao"
 	"backend2/internal/client/model"
 	"backend2/internal/customerror"
@@ -138,9 +139,12 @@ func (c *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	id := vars["id"]
-	addr := vars["address_id"]
 
-	err := c.dao.Update(c.ctx, id, addr)
+	var addr addrModel.Address
+	reqBody, _ := io.ReadAll(r.Body)
+	err := json.Unmarshal(reqBody, &addr)
+
+	err = c.dao.Update(c.ctx, id, addr)
 	if err != nil {
 		return err
 	}

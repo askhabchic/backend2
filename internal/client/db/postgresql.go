@@ -1,6 +1,7 @@
 package db
 
 import (
+	model2 "backend2/internal/address/model"
 	"backend2/internal/client/model"
 	"backend2/pkg/logging"
 	"context"
@@ -79,14 +80,11 @@ func (r *Repository) FindOne(ctx context.Context, name, surname string) (*model.
 	return &cl, nil
 }
 
-func (r *Repository) Update(ctx context.Context, id, addr string) error {
-	q := `UPDATE client SET address_id = $1 WHERE id = $2`
+func (r *Repository) Update(ctx context.Context, id string, addr model2.Address) error {
+	q := `UPDATE address SET country = $1, city = $2, street = $3 FROM address WHERE id = (SELECT address_id FROM public.client WHERE id = $4)`
 
-	rows, err := r.psgr.Query(ctx, q, addr, id)
-	if err != nil {
-		return err
-	}
-	if err = rows.Err(); err != nil {
+	rows, _ := r.psgr.Query(ctx, q, addr.Country, addr.City, addr.Street, id)
+	if err := rows.Err(); err != nil {
 		return err
 	}
 	return nil

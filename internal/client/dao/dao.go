@@ -1,6 +1,7 @@
 package dao
 
 import (
+	model2 "backend2/internal/address/model"
 	"backend2/internal/client/db"
 	"backend2/internal/client/model"
 	"context"
@@ -40,7 +41,7 @@ func (c *DAO) FindAll(ctx context.Context, limit, offset int) ([]model.Client, e
 	return all, nil
 }
 
-func (c *DAO) Update(ctx context.Context, id, addr string) error {
+func (c *DAO) Update(ctx context.Context, id string, addr model2.Address) error {
 	err := c.repo.Update(ctx, id, addr)
 	if err != nil {
 		return err
