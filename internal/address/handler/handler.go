@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	addressURL   = "/api/address/:uuid"
-	addressesURL = "/api/addresses"
+	addressURL = "/api/address/:uuid"
+	addrURL    = "/api/address"
 )
 
 type addressHandler struct {
@@ -35,21 +35,62 @@ func NewAddressHandler(logger *logging.Logger, dao *dao.DAO, ctx context.Context
 }
 
 func (a addressHandler) Register(r *httprouter.Router) {
-	r.HandlerFunc(http.MethodGet, addressesURL, customerror.Middleware(a.GetAll))
+	r.HandlerFunc(http.MethodGet, addrURL, customerror.Middleware(a.GetAll))
 	r.HandlerFunc(http.MethodGet, addressURL, customerror.Middleware(a.GetByID))
-	r.HandlerFunc(http.MethodPost, addressURL, customerror.Middleware(a.Create))
+	r.HandlerFunc(http.MethodPost, addrURL, customerror.Middleware(a.Create))
 	r.HandlerFunc(http.MethodPut, addressURL, customerror.Middleware(a.Update))
 	r.HandlerFunc(http.MethodDelete, addressURL, customerror.Middleware(a.Delete))
 }
 
 func (a addressHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	//TODO implement me
-	panic("implement me")
+	a.logger.Infof("func GetAll")
+	w.Header().Set("Content-Type", "application/json")
+
+	all, err := a.dao.FindAll(a.ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	marshal, err := json.Marshal(all)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(marshal)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	return nil
 }
 
 func (a addressHandler) GetByID(w http.ResponseWriter, r *http.Request) error {
-	//TODO implement me
-	panic("implement me")
+	a.logger.Infof("func GetByID")
+	vars := mux.Vars(r)
+	id := vars["id"]
+	w.Header().Set("Content-Type", "application/json")
+
+	one, err := a.dao.FindOne(a.ctx, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+
+	marshal, err := json.Marshal(one)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(marshal)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	return nil
 }
 
 func (a addressHandler) Create(w http.ResponseWriter, r *http.Request) error {

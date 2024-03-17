@@ -10,7 +10,7 @@ type DAO struct {
 	repo *db.Repository
 }
 
-func NewClientDAO(r *db.Repository) *DAO {
+func NewAddressDAO(r *db.Repository) *DAO {
 	return &DAO{
 		r,
 	}
@@ -24,16 +24,16 @@ func (c *DAO) Create(ctx context.Context, cl *model.Address) (*model.Address, er
 	return cli, nil
 }
 
-func (c *DAO) FindOne(ctx context.Context, name, surname string) (*model.Address, error) {
-	one, err := c.repo.FindOne(ctx, name, surname)
+func (c *DAO) FindOne(ctx context.Context, id string) (*model.Address, error) {
+	one, err := c.repo.FindOne(ctx, id)
 	if err != nil {
 		return &model.Address{}, err
 	}
 	return one, nil
 }
 
-func (c *DAO) FindAll(ctx context.Context, limit, offset int) ([]model.Address, error) {
-	all, err := c.repo.FindAll(ctx, limit, offset)
+func (c *DAO) FindAll(ctx context.Context) ([]model.Address, error) {
+	all, err := c.repo.FindAll(ctx)
 	if err != nil {
 		return []model.Address{}, err
 	}

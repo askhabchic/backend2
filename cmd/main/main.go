@@ -19,7 +19,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 func main() {
@@ -40,7 +39,7 @@ func main() {
 
 	//handlers
 	logger.Infof("create requests handler")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	logger.Infof("connect ot database")
@@ -58,7 +57,7 @@ func main() {
 
 	logger.Infof("create Address Service")
 	addRepo := addrDb.NewRepository(cli, logger)
-	addrDAO := addrDao.NewClientDAO(addRepo)
+	addrDAO := addrDao.NewAddressDAO(addRepo)
 
 	logger.Infof("create Address Handler")
 	addrHandler := addrhandler.NewAddressHandler(logger, addrDAO, ctx)

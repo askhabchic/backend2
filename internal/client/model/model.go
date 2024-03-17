@@ -17,9 +17,9 @@ var ClientTableQuery = `CREATE TABLE IF NOT EXISTS client
 id uuid NOT NULL,
 client_name character varying(20) COLLATE pg_catalog."default",
 client_surname character varying(20) COLLATE pg_catalog."default",
-birthday date,
+birthday character varying(20),
 gender boolean,
-registration_date date,
+registration_date character varying(20),
 address_id uuid,
 CONSTRAINT client_pkey PRIMARY KEY (id),
 CONSTRAINT address_id FOREIGN KEY (address_id)
