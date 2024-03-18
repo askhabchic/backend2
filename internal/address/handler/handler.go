@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"net/http"
@@ -36,7 +35,7 @@ func NewAddressHandler(logger *logging.Logger, dao *dao.DAO, ctx context.Context
 
 func (a addressHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, addrURL, customerror.Middleware(a.GetAll))
-	r.HandlerFunc(http.MethodGet, addressURL, customerror.Middleware(a.GetByID))
+	r.HandlerFunc(http.MethodGet, addressURL, customerror.Middleware(a.GetOne))
 	r.HandlerFunc(http.MethodPost, addrURL, customerror.Middleware(a.Create))
 	r.HandlerFunc(http.MethodPut, addressURL, customerror.Middleware(a.Update))
 	r.HandlerFunc(http.MethodDelete, addressURL, customerror.Middleware(a.Delete))
@@ -67,10 +66,9 @@ func (a addressHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (a addressHandler) GetByID(w http.ResponseWriter, r *http.Request) error {
+func (a addressHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 	a.logger.Infof("func GetByID")
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.URL.Query().Get("id")
 	w.Header().Set("Content-Type", "application/json")
 
 	one, err := a.dao.FindOne(a.ctx, id)
@@ -130,8 +128,7 @@ func (a addressHandler) Create(w http.ResponseWriter, r *http.Request) error {
 func (a addressHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	a.logger.Infof("func Update")
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.URL.Query().Get("id")
 
 	reqBody, _ := io.ReadAll(r.Body)
 	var addr *model.Address
@@ -152,8 +149,7 @@ func (a addressHandler) Update(w http.ResponseWriter, r *http.Request) error {
 func (a addressHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	a.logger.Infof("func Delete")
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.URL.Query().Get("id")
 
 	err := a.dao.Delete(a.ctx, id)
 	if err != nil {

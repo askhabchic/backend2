@@ -38,14 +38,14 @@ func NewClientHandler(logger *logging.Logger, dao *dao.DAO, ctx context.Context)
 
 func (c *clientHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, clientsURL, customerror.Middleware(c.GetAll))
-	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(c.GetByID))
+	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(c.GetOne))
 	r.HandlerFunc(http.MethodPost, clientsURL, customerror.Middleware(c.Create))
 	r.HandlerFunc(http.MethodPut, clientsURL, customerror.Middleware(c.Update))
 	r.HandlerFunc(http.MethodDelete, clientURL, customerror.Middleware(c.Delete))
 }
 
 func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	c.logger.Infof("func GetAll")
+	c.logger.Trace("func GetAll")
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	limit, _ := strconv.Atoi(vars["limit"])
@@ -72,11 +72,10 @@ func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (c *clientHandler) GetByID(w http.ResponseWriter, r *http.Request) error {
-	c.logger.Infof("func GetByID")
-	vars := mux.Vars(r)
-	name := vars["name"]
-	surname := vars["surname"]
+func (c *clientHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
+	c.logger.Trace("func GetByID")
+	name := r.URL.Query().Get("name")
+	surname := r.URL.Query().Get("surname")
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -101,7 +100,7 @@ func (c *clientHandler) GetByID(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
-	c.logger.Infof("func Create")
+	c.logger.Trace("func Create")
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -135,10 +134,9 @@ func (c *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
-	c.logger.Infof("func Update")
+	c.logger.Trace("func Update")
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.URL.Query().Get("id")
 
 	var addr addrModel.Address
 	reqBody, _ := io.ReadAll(r.Body)
@@ -157,10 +155,9 @@ func (c *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (c *clientHandler) Delete(w http.ResponseWriter, r *http.Request) error {
-	c.logger.Infof("func Delete")
+	c.logger.Trace("func Delete")
 	w.Header().Set("Content-Type", "application/json")
-	vars := mux.Vars(r)
-	id := vars["id"]
+	id := r.URL.Query().Get("id")
 
 	err := c.dao.Delete(c.ctx, id)
 	if err != nil {
