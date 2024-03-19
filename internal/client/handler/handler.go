@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	clientURL  = "/api/client/:uuid"
+	clientURL  = "/api/client"
 	clientsURL = "/api/clients"
 )
 
@@ -40,9 +40,11 @@ func (c *clientHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, clientsURL, customerror.Middleware(c.GetAll))
 	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(c.GetOne))
 	r.HandlerFunc(http.MethodPost, clientsURL, customerror.Middleware(c.Create))
-	r.HandlerFunc(http.MethodPut, clientsURL, customerror.Middleware(c.Update))
+	r.HandlerFunc(http.MethodPut, clientURL, customerror.Middleware(c.Update))
 	r.HandlerFunc(http.MethodDelete, clientURL, customerror.Middleware(c.Delete))
 }
+
+//TODO check all if/return/error and duplication of code
 
 func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	c.logger.Trace("func GetAll")
@@ -63,12 +65,12 @@ func (c *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(marshal)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
@@ -144,29 +146,24 @@ func (c *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	err = c.dao.Update(c.ctx, id, addr)
 	if err != nil {
-		return err
-	}
-	w.WriteHeader(http.StatusOK)
-	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func (c *clientHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	c.logger.Trace("func Delete")
 	w.Header().Set("Content-Type", "application/json")
-	id := r.URL.Query().Get("id")
+	id := r.FormValue("id")
 
 	err := c.dao.Delete(c.ctx, id)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-	if err != nil {
-		return err
-	}
 	return nil
 }

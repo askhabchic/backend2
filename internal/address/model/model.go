@@ -18,4 +18,4 @@ var AddressTableQuery = `CREATE TABLE IF NOT EXISTS address
     CONSTRAINT address_pkey PRIMARY KEY (id)
 );`
 
-var AddressInsertionQuery = `INSERT INTO address (id, country, city, street) VALUES ($1, $2, $3, $4) ON CONFLICT (city, street) DO NOTHING`
+var AddressInsertionQuery = `INSERT INTO address (id, country, city, street) VALUES ($1, $2, $3, $4)`

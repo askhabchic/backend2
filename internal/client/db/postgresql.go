@@ -5,6 +5,8 @@ import (
 	"backend2/internal/client/model"
 	"backend2/pkg/logging"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -55,15 +57,12 @@ func (r *Repository) FindAll(ctx context.Context, limit, offset int) (cls []mode
 	cls = make([]model.Client, 0)
 	for rows.Next() {
 		var cl model.Client
-		err := rows.Scan(&cl.ID, &cl.Name, &cl.Surname, &cl.Birthday,
+		err = rows.Scan(&cl.ID, &cl.Name, &cl.Surname, &cl.Birthday,
 			&cl.Gender, &cl.RegistrationDate, &cl.AddressId)
-		if err != nil {
+		if err != nil || errors.Is(err, rows.Err()) {
 			return nil, err
 		}
 		cls = append(cls, cl)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 	return cls, nil
 }
@@ -81,22 +80,40 @@ func (r *Repository) FindOne(ctx context.Context, name, surname string) (*model.
 }
 
 func (r *Repository) Update(ctx context.Context, id string, addr model2.Address) error {
-	q := `UPDATE client SET address_id = $1 WHERE id = $2`
-
 	idUUID, err := uuid.NewV4()
 	if err != nil {
 		return err
 	}
+
+	var existedID uuid.UUID //TODO it's maybe problem
+	q := `SELECT id FROM address WHERE city = $1, street = $2`
 	r.logger.Tracef("SQL Query: %s", model2.AddressInsertionQuery)
-	if err = r.psgr.QueryRow(ctx, model2.AddressInsertionQuery, idUUID, addr.Country, addr.City, addr.Street).Scan(&addr.ID); err != nil {
+	err = r.psgr.QueryRow(ctx, q, addr.City, addr.Street).Scan(&existedID)
+
+	q = `UPDATE client SET address_id = $1 WHERE id = $2`
+	r.logger.Tracef("SQL Query: %s", q)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			row := r.psgr.QueryRow(ctx, model2.AddressInsertionQuery, idUUID, addr.Country, addr.City, addr.Street)
+			if err = row.Scan(&addr.ID); err != nil {
+				return err
+			}
+			//todo implementation of correct return
+			_, queryError := r.psgr.Query(ctx, q, idUUID, id)
+			if queryError != nil {
+				return queryError
+			}
+		} else {
+			return err
+		}
+	}
+
+	rows, _ := r.psgr.Query(ctx, q, existedID, id)
+	if err = rows.Err(); err != nil {
 		return err
 	}
 
-	r.logger.Tracef("SQL Query: %s", q)
-	rows, _ := r.psgr.Query(ctx, q, idUUID, id)
-	if err := rows.Err(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -104,10 +121,7 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	q := `DELETE FROM client WHERE id = $1`
 
 	rows, err := r.psgr.Query(ctx, q, id)
-	if err != nil {
-		return err
-	}
-	if err = rows.Err(); err != nil {
+	if err != nil || errors.Is(err, rows.Err()) {
 		return err
 	}
 	return nil

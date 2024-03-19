@@ -6,7 +6,6 @@ import (
 )
 
 type Handler interface {
-	//ServeHTTP(writer http.ResponseWriter, request *http.Request)
 	Register(router *httprouter.Router)
 	GetAll(w http.ResponseWriter, r *http.Request) error
 	GetOne(w http.ResponseWriter, r *http.Request) error

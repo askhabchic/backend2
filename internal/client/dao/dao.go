@@ -18,11 +18,11 @@ func NewClientDAO(r *db.Repository) *DAO {
 }
 
 func (c *DAO) Create(ctx context.Context, cl *model.Client) (*model.Client, error) {
-	cli, err := c.repo.Create(ctx, cl)
+	client, err := c.repo.Create(ctx, cl)
 	if err != nil {
 		return &model.Client{}, err
 	}
-	return cli, nil
+	return client, nil
 }
 
 func (c *DAO) FindOne(ctx context.Context, name, surname string) (*model.Client, error) {
