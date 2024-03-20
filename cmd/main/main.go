@@ -70,11 +70,12 @@ func main() {
 	}
 
 	logger.Infof("create Client Service")
-	clientRepo := cliDb.NewRepository(cli, logger)
-	clientDAO := clientDao.NewClientDAO(clientRepo)
+	clientDAO := clientDao.NewClientDAO(cli, logger)
+	logger.Infof("create Client Repository")
+	clientRepo := cliDb.NewClientRepository(clientDAO)
 
 	logger.Infof("create Client Handler")
-	clientHandler := handler.NewClientHandler(logger, clientDAO, ctx)
+	clientHandler := handler.NewClientHandler(logger, clientRepo, ctx)
 	clientHandler.Register(router)
 
 	logger.Infof("start server")
