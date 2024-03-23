@@ -4,12 +4,12 @@ import (
 	"backend2/cmd/server"
 	addrDao "backend2/internal/address/dao"
 	addrDb "backend2/internal/address/db"
+	modelAddress "backend2/internal/address/dto"
 	addrhandler "backend2/internal/address/handler"
-	modelAddress "backend2/internal/address/model"
 	clientDao "backend2/internal/client/dao"
 	cliDb "backend2/internal/client/db"
+	modelClient "backend2/internal/client/dto"
 	"backend2/internal/client/handler"
-	modelClient "backend2/internal/client/model"
 	"backend2/internal/config"
 	"backend2/pkg/db/postgresql"
 	"backend2/pkg/logging"
@@ -49,32 +49,32 @@ func main() {
 	}
 	defer cli.Close()
 
-	logger.Infof("create Address table")
+	logger.Infof("create AddressDTO table")
 	err = postgresql.CreateTable(modelAddress.AddressTableQuery, ctx, cli, logger)
 	if err != nil {
 		return
 	}
 
-	logger.Infof("create Address Service")
-	addRepo := addrDb.NewRepository(cli, logger)
-	addrDAO := addrDao.NewAddressDAO(addRepo)
+	logger.Infof("create AddressDTO Service")
+	addrDAO := addrDao.NewAddressDAO(cli, logger)
+	addRepo := addrDb.NewAddressRepository(addrDAO)
 
-	logger.Infof("create Address Handler")
-	addrHandler := addrhandler.NewAddressHandler(logger, addrDAO, ctx)
+	logger.Infof("create AddressDTO Handler")
+	addrHandler := addrhandler.NewAddressHandler(logger, addRepo, ctx)
 	addrHandler.Register(router)
 
-	logger.Infof("create Client table")
+	logger.Infof("create ClientDTO table")
 	err = postgresql.CreateTable(modelClient.ClientTableQuery, ctx, cli, logger)
 	if err != nil {
 		return
 	}
 
-	logger.Infof("create Client Service")
+	logger.Infof("create ClientDTO Service")
 	clientDAO := clientDao.NewClientDAO(cli, logger)
-	logger.Infof("create Client Repository")
+	logger.Infof("create ClientDTO Repository")
 	clientRepo := cliDb.NewClientRepository(clientDAO)
 
-	logger.Infof("create Client Handler")
+	logger.Infof("create ClientDTO Handler")
 	clientHandler := handler.NewClientHandler(logger, clientRepo, ctx)
 	clientHandler.Register(router)
 

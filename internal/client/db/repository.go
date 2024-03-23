@@ -1,9 +1,9 @@
 package db
 
 import (
-	model2 "backend2/internal/address/model"
+	model2 "backend2/internal/address/dto"
 	"backend2/internal/client/dao"
-	"backend2/internal/client/model"
+	"backend2/internal/client/dto"
 	"context"
 )
 
@@ -17,27 +17,27 @@ func NewClientRepository(dao *dao.ClientDAO) *ClientRepository {
 	}
 }
 
-func (repo *ClientRepository) Create(ctx context.Context, cl *model.Client) error {
+func (repo *ClientRepository) Create(ctx context.Context, cl *dto.ClientDTO) error {
 	return repo.dao.Create(ctx, cl)
 }
 
-func (repo *ClientRepository) FindOne(ctx context.Context, name, surname string) (*model.Client, error) {
+func (repo *ClientRepository) FindOne(ctx context.Context, name, surname string) (*dto.ClientDTO, error) {
 	one, err := repo.dao.FindOne(ctx, name, surname)
 	if err != nil {
-		return &model.Client{}, err
+		return &dto.ClientDTO{}, err
 	}
 	return one, nil
 }
 
-func (repo *ClientRepository) FindAll(ctx context.Context, limit, offset int) ([]model.Client, error) {
+func (repo *ClientRepository) FindAll(ctx context.Context, limit, offset int) ([]dto.ClientDTO, error) {
 	all, err := repo.dao.FindAll(ctx, limit, offset)
 	if err != nil {
-		return []model.Client{}, err
+		return []dto.ClientDTO{}, err
 	}
 	return all, nil
 }
 
-func (repo *ClientRepository) Update(ctx context.Context, id string, addr model2.Address) error {
+func (repo *ClientRepository) Update(ctx context.Context, id string, addr model2.AddressDTO) error {
 	return repo.dao.Update(ctx, id, addr)
 }
 

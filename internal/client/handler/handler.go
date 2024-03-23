@@ -1,9 +1,9 @@
 package handler
 
 import (
-	addrModel "backend2/internal/address/model"
+	addrModel "backend2/internal/address/dto"
 	"backend2/internal/client/db"
-	"backend2/internal/client/model"
+	"backend2/internal/client/dto"
 	"backend2/internal/customerror"
 	"backend2/internal/handlers"
 	"backend2/pkg/logging"
@@ -107,8 +107,8 @@ func (h *clientHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 
 func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	h.logger.Trace("func Create")
-	//TODO уточнить MODEL/DTO
-	var newClient model.Client
+
+	var newClient dto.ClientDTO
 	err := json.NewDecoder(r.Body).Decode(&newClient)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -133,7 +133,7 @@ func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 	//
 	//w.Header().Set("Content-Type", "application/json")
 	//reqBody, _ := io.ReadAll(r.Body)
-	//var cl model.Client
+	//var cl dto.ClientDTO
 	//err := json.Unmarshal(reqBody, &cl)
 	//if err != nil {
 	//	w.WriteHeader(http.StatusInternalServerError)
@@ -160,7 +160,7 @@ func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	h.logger.Trace("func Update")
 
 	id := r.URL.Query().Get("id")
-	var address addrModel.Address
+	var address addrModel.AddressDTO
 	err := json.NewDecoder(r.Body).Decode(&address)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -178,7 +178,7 @@ func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 	//w.Header().Set("Content-Type", "application/json")
 	//id := r.URL.Query().Get("id")
 	//
-	//var addr addrModel.Address
+	//var addr addrModel.AddressDTO
 	//reqBody, _ := io.ReadAll(r.Body)
 	//err := json.Unmarshal(reqBody, &addr)
 	//

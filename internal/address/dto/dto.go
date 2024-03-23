@@ -1,8 +1,8 @@
-package model
+package dto
 
 import "github.com/gofrs/uuid"
 
-type Address struct {
+type AddressDTO struct {
 	ID      uuid.UUID `json:"id"`
 	Country string    `json:"country"`
 	City    string    `json:"city"`

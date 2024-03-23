@@ -1,8 +1,8 @@
 package dao
 
 import (
-	model2 "backend2/internal/address/model"
-	"backend2/internal/client/model"
+	model2 "backend2/internal/address/dto"
+	"backend2/internal/client/dto"
 	"backend2/pkg/logging"
 	"context"
 	"errors"
@@ -24,7 +24,7 @@ func NewClientDAO(client *pgxpool.Pool, logger *logging.Logger) *ClientDAO {
 	}
 }
 
-func (dao *ClientDAO) Create(ctx context.Context, cl *model.Client) error {
+func (dao *ClientDAO) Create(ctx context.Context, cl *dto.ClientDTO) error {
 	q := `INSERT INTO client (id, client_name, client_surname, birthday, gender, registration_date, address_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 	var id, err = uuid.NewV4()
 	if err != nil {
@@ -40,7 +40,7 @@ func (dao *ClientDAO) Create(ctx context.Context, cl *model.Client) error {
 	return nil
 }
 
-func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset int) (cls []model.Client, err error) {
+func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset int) (cls []dto.ClientDTO, err error) {
 	q := `SELECT id, client_name, client_surname, birthday, gender, registration_date, address_id FROM public.client`
 	if limit != 0 {
 		q = fmt.Sprintf(q+` LIMIT %d`, limit)
@@ -54,9 +54,9 @@ func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset int) (cls []mod
 	if err != nil {
 		return nil, err
 	}
-	cls = make([]model.Client, 0)
+	cls = make([]dto.ClientDTO, 0)
 	for rows.Next() {
-		var cl model.Client
+		var cl dto.ClientDTO
 		err = rows.Scan(&cl.ID, &cl.Name, &cl.Surname, &cl.Birthday,
 			&cl.Gender, &cl.RegistrationDate, &cl.AddressId)
 		if err != nil && errors.Is(err, rows.Err()) {
@@ -67,19 +67,20 @@ func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset int) (cls []mod
 	return cls, nil
 }
 
-func (dao *ClientDAO) FindOne(ctx context.Context, name, surname string) (*model.Client, error) {
+func (dao *ClientDAO) FindOne(ctx context.Context, name, surname string) (*dto.ClientDTO, error) {
 	q := `SELECT id, client_name, client_surname, birthday, gender, registration_date, address_id FROM public.client WHERE client_name=$1 AND client_surname = $2`
 
 	dao.logger.Tracef("SQL Query: %s", q)
-	var cl model.Client
+	var cl dto.ClientDTO
 	if err := dao.db.QueryRow(ctx, q, name, surname).Scan(&cl.ID, &cl.Name, &cl.Surname,
 		&cl.Birthday, &cl.Gender, &cl.RegistrationDate, &cl.AddressId); err != nil {
-		return &model.Client{}, err
+		return &dto.ClientDTO{}, err
 	}
 	return &cl, nil
 }
 
-func (dao *ClientDAO) Update(ctx context.Context, id string, addr model2.Address) error {
+// TODO debug
+func (dao *ClientDAO) Update(ctx context.Context, id string, addr model2.AddressDTO) error {
 	idUUID, err := uuid.NewV4()
 	if err != nil {
 		return err

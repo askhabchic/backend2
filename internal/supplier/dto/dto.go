@@ -1,8 +1,8 @@
-package model
+package dto
 
 import "github.com/gofrs/uuid"
 
-type Supplier struct {
+type SupplierDTO struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
 	AddressId   uuid.UUID `json:"address_id"`
