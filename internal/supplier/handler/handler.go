@@ -9,6 +9,7 @@ import (
 	"backend2/pkg/logging"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -35,7 +36,7 @@ func NewSupplierHandler(logger *logging.Logger, repo *db.SupplierRepository, ctx
 func (s *supplierHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, suppliersURL, customerror.Middleware(s.GetAll))
 	r.HandlerFunc(http.MethodGet, supplierURL, customerror.Middleware(s.GetOne))
-	r.HandlerFunc(http.MethodPost, suppliersURL, customerror.Middleware(s.Create))
+	r.HandlerFunc(http.MethodPost, supplierURL, customerror.Middleware(s.Create))
 	r.HandlerFunc(http.MethodPut, supplierURL, customerror.Middleware(s.Update))
 	r.HandlerFunc(http.MethodDelete, supplierURL, customerror.Middleware(s.Delete))
 }
@@ -65,6 +66,11 @@ func (s *supplierHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 	s.logger.Tracef("func GetAll")
 
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return fmt.Errorf("%d Invalid request body", http.StatusBadRequest)
+	}
+
 	one, err := s.repo.FindOne(s.ctx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -92,13 +98,19 @@ func (s *supplierHandler) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	return nil
 }
 
 func (s *supplierHandler) Update(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func Delete")
+	s.logger.Tracef("func Update")
+
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return fmt.Errorf("%d Invalid request body", http.StatusBadRequest)
+	}
 
 	var address addrModel.AddressDTO
 	err := json.NewDecoder(r.Body).Decode(&address)
@@ -113,14 +125,19 @@ func (s *supplierHandler) Update(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func (s *supplierHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 	s.logger.Tracef("func Delete")
-	w.Header().Set("Content-Type", "application/json")
+
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return fmt.Errorf("%d Invalid request body", http.StatusBadRequest)
+	}
 
 	err := s.repo.Delete(s.ctx, id)
 	if err != nil {
@@ -128,6 +145,7 @@ func (s *supplierHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }

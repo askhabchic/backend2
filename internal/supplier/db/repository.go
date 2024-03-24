@@ -13,7 +13,8 @@ type SupplierRepository struct {
 
 func NewSupplierRepository(dao *dao.SupplierDAO) *SupplierRepository {
 	return &SupplierRepository{
-		dao: dao}
+		dao: dao,
+	}
 }
 
 func (repo *SupplierRepository) Create(ctx context.Context, supplier *dto.SupplierDTO) error {
@@ -21,23 +22,15 @@ func (repo *SupplierRepository) Create(ctx context.Context, supplier *dto.Suppli
 }
 
 func (repo *SupplierRepository) FindOne(ctx context.Context, id string) (*dto.SupplierDTO, error) {
-	one, err := repo.dao.FindOne(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	return one, nil
+	return repo.dao.FindOne(ctx, id)
 }
 
 func (repo *SupplierRepository) FindAll(ctx context.Context) ([]dto.SupplierDTO, error) {
-	all, err := repo.dao.FindAll(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return all, nil
+	return repo.dao.FindAll(ctx)
 }
 
 func (repo *SupplierRepository) Update(ctx context.Context, id string, addr model2.AddressDTO) error {
-	return repo.dao.Update(ctx, id, addr)
+	return repo.dao.Update(ctx, id, &addr)
 }
 
 func (repo *SupplierRepository) Delete(ctx context.Context, id string) error {

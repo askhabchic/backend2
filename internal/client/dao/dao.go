@@ -1,6 +1,7 @@
 package dao
 
 import (
+	addressDAO "backend2/internal/address/dao"
 	model2 "backend2/internal/address/dto"
 	"backend2/internal/client/dto"
 	"backend2/pkg/logging"
@@ -40,13 +41,13 @@ func (dao *ClientDAO) Create(ctx context.Context, cl *dto.ClientDTO) error {
 	return nil
 }
 
-func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset int) (cls []dto.ClientDTO, err error) {
+func (dao *ClientDAO) FindAll(ctx context.Context, limit, offset string) (cls []dto.ClientDTO, err error) {
 	q := `SELECT id, client_name, client_surname, birthday, gender, registration_date, address_id FROM public.client`
-	if limit != 0 {
-		q = fmt.Sprintf(q+` LIMIT %d`, limit)
+	if limit != "" {
+		q = fmt.Sprintf(q + fmt.Sprintf(` LIMIT %s`, limit))
 	}
-	if offset != 0 {
-		q = fmt.Sprintf(q+` OFFSET %d`, offset)
+	if offset != "" {
+		q = fmt.Sprintf(q + fmt.Sprintf(` OFFSET %s`, offset))
 	}
 	dao.logger.Tracef("SQL Query: %s", q)
 	rows, err := dao.db.Query(ctx, q)
@@ -80,35 +81,31 @@ func (dao *ClientDAO) FindOne(ctx context.Context, name, surname string) (*dto.C
 }
 
 // TODO debug
-func (dao *ClientDAO) Update(ctx context.Context, id string, addr model2.AddressDTO) error {
-	idUUID, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
-
-	var existedID uuid.UUID //TODO it's maybe problem
-	q := `SELECT id FROM address WHERE city = $1 AND street = $2`
+func (dao *ClientDAO) Update(ctx context.Context, id string, addr *model2.AddressDTO) error {
+	var existedID string //TODO it's maybe problem
+	querySelect := `SELECT id FROM address WHERE city = $1 AND street = $2`
 	dao.logger.Tracef("SQL Query: %s", model2.AddressInsertionQuery)
-	err = dao.db.QueryRow(ctx, q, addr.City, addr.Street).Scan(&existedID)
+	err := dao.db.QueryRow(ctx, querySelect, addr.City, addr.Street).Scan(&existedID)
 
-	q = `UPDATE client SET address_id = $1 WHERE id = $2`
-	dao.logger.Tracef("SQL Query: %s", q)
+	queryUpdate := `UPDATE client SET address_id = $1 WHERE id = $2`
+	dao.logger.Tracef("SQL Query: %s", queryUpdate)
 
-	if err != nil && errors.Is(err, pgx.ErrNoRows) {
-		row := dao.db.QueryRow(ctx, model2.AddressInsertionQuery, idUUID, addr.Country, addr.City, addr.Street)
-		if err = row.Scan(&addr.ID); err != nil {
+	if err != nil && err.Error() == pgx.ErrNoRows.Error() {
+		newAddress, err := addressDAO.NewAddressDAO(dao.db, dao.logger).Create(ctx, addr)
+		if err != nil {
 			return err
 		}
-		//todo implementation of correct return
-		_, queryError := dao.db.Query(ctx, q, idUUID, id)
+
+		_, queryError := dao.db.Query(ctx, queryUpdate, newAddress.ID, id)
 		if queryError != nil {
 			return queryError
 		}
+		return nil
 	}
 
-	rows, _ := dao.db.Query(ctx, q, existedID, id)
-	if err = rows.Err(); err != nil {
-		return err
+	_, queryError := dao.db.Query(ctx, queryUpdate, existedID, id)
+	if queryError != nil {
+		return queryError
 	}
 
 	return nil
@@ -119,7 +116,7 @@ func (dao *ClientDAO) Delete(ctx context.Context, id string) error {
 	dao.logger.Tracef("SQL Query: %s", q)
 
 	rows, err := dao.db.Query(ctx, q, id)
-	if err != nil || errors.Is(err, rows.Err()) {
+	if err != nil && errors.Is(err, rows.Err()) {
 		return err
 	}
 	return nil

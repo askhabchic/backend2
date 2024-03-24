@@ -9,10 +9,8 @@ import (
 	"backend2/pkg/logging"
 	"context"
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"strconv"
 )
 
 const (
@@ -46,9 +44,8 @@ func (h *clientHandler) Register(r *httprouter.Router) {
 
 func (h *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	h.logger.Trace("func GetAll")
-	vars := mux.Vars(r)
-	limit, _ := strconv.Atoi(vars["limit"])
-	offset, _ := strconv.Atoi(vars["offset"])
+	limit := r.URL.Query().Get("limit")
+	offset := r.URL.Query().Get("offset")
 
 	all, err := h.repo.FindAll(h.ctx, limit, offset)
 	if err != nil {
@@ -65,14 +62,6 @@ func (h *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(clients)
-
-	//clients, err := w.Write(marshal)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return err
-	//}
-	//w.WriteHeader(http.StatusOK)
-
 	return nil
 }
 
@@ -91,18 +80,6 @@ func (h *clientHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 
 	json.NewEncoder(w).Encode(client)
 	return nil
-	//marshal, err := json.Marshal(one)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return err
-	//}
-	//w.WriteHeader(http.StatusOK)
-	//_, err = w.Write(marshal)
-	//if err != nil {
-	//	http.Error(w, err.Error(), http.StatusInternalServerError)
-	//	return err
-	//}
-	//return nil
 }
 
 func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
@@ -123,37 +100,6 @@ func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 
 	w.WriteHeader(http.StatusCreated)
 	return nil
-
-	//if r.Method != http.MethodPost {
-	//	w.Header().Set("Allow", http.MethodPost)
-	//	w.WriteHeader(http.StatusMethodNotAllowed)
-	//	w.Write([]byte("This method not allowed"))
-	//	return fmt.Errorf("%d %s method not allowed", http.StatusMethodNotAllowed, r.Method)
-	//}
-	//
-	//w.Header().Set("Content-Type", "application/json")
-	//reqBody, _ := io.ReadAll(r.Body)
-	//var cl dto.ClientDTO
-	//err := json.Unmarshal(reqBody, &cl)
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//
-	//}
-	//
-	//cli, err := h.repo.Create(h.ctx, &cl)
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//
-	//}
-	//
-	//w.WriteHeader(http.StatusCreated)
-	//marshal, err := json.Marshal(cli)
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//
-	//}
-	//_, err = w.Write(marshal)
-
 }
 
 func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
@@ -174,21 +120,6 @@ func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 
 	w.WriteHeader(http.StatusOK)
 	return nil
-
-	//w.Header().Set("Content-Type", "application/json")
-	//id := r.URL.Query().Get("id")
-	//
-	//var addr addrModel.AddressDTO
-	//reqBody, _ := io.ReadAll(r.Body)
-	//err := json.Unmarshal(reqBody, &addr)
-	//
-	//err = h.repo.Update(h.ctx, id, addr)
-	//if err != nil {
-	//	w.WriteHeader(http.StatusInternalServerError)
-	//
-	//}
-	//w.WriteHeader(http.StatusOK)
-
 }
 
 func (h *clientHandler) Delete(w http.ResponseWriter, r *http.Request) error {

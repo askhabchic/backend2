@@ -22,23 +22,15 @@ func (repo *ClientRepository) Create(ctx context.Context, cl *dto.ClientDTO) err
 }
 
 func (repo *ClientRepository) FindOne(ctx context.Context, name, surname string) (*dto.ClientDTO, error) {
-	one, err := repo.dao.FindOne(ctx, name, surname)
-	if err != nil {
-		return &dto.ClientDTO{}, err
-	}
-	return one, nil
+	return repo.dao.FindOne(ctx, name, surname)
 }
 
-func (repo *ClientRepository) FindAll(ctx context.Context, limit, offset int) ([]dto.ClientDTO, error) {
-	all, err := repo.dao.FindAll(ctx, limit, offset)
-	if err != nil {
-		return []dto.ClientDTO{}, err
-	}
-	return all, nil
+func (repo *ClientRepository) FindAll(ctx context.Context, limit, offset string) ([]dto.ClientDTO, error) {
+	return repo.dao.FindAll(ctx, limit, offset)
 }
 
 func (repo *ClientRepository) Update(ctx context.Context, id string, addr model2.AddressDTO) error {
-	return repo.dao.Update(ctx, id, addr)
+	return repo.dao.Update(ctx, id, &addr)
 }
 
 func (repo *ClientRepository) Delete(ctx context.Context, id string) error {

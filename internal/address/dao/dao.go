@@ -8,56 +8,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-//type DAO struct {
-//	repo *db.Repository
-//}
-//
-//func NewAddressDAO(r *db.Repository) *DAO {
-//	return &DAO{
-//		r,
-//	}
-//}
-//
-//func (c *DAO) Create(ctx context.Context, cl *dto.AddressDTO) (*dto.AddressDTO, error) {
-//	cli, err := c.repo.Create(ctx, cl)
-//	if err != nil {
-//		return &dto.AddressDTO{}, err
-//	}
-//	return cli, nil
-//}
-//
-//func (c *DAO) FindOne(ctx context.Context, id string) (*dto.AddressDTO, error) {
-//	one, err := c.repo.FindOne(ctx, id)
-//	if err != nil {
-//		return &dto.AddressDTO{}, err
-//	}
-//	return one, nil
-//}
-//
-//func (c *DAO) FindAll(ctx context.Context) ([]dto.AddressDTO, error) {
-//	all, err := c.repo.FindAll(ctx)
-//	if err != nil {
-//		return []dto.AddressDTO{}, err
-//	}
-//	return all, nil
-//}
-//
-//func (c *DAO) Update(ctx context.Context, id string, addr *dto.AddressDTO) (*dto.AddressDTO, error) {
-//	updatedAddress, err := c.repo.Update(ctx, id, addr)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return updatedAddress, nil
-//}
-//
-//func (c *DAO) Delete(ctx context.Context, id string) error {
-//	err := c.repo.Delete(ctx, id)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
 type AddressDAO struct {
 	psgr   *pgxpool.Pool
 	logger *logging.Logger

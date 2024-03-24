@@ -4,13 +4,17 @@ import (
 	"backend2/cmd/server"
 	addrDao "backend2/internal/address/dao"
 	addrDb "backend2/internal/address/db"
-	modelAddress "backend2/internal/address/dto"
+	addrModel "backend2/internal/address/dto"
 	addrhandler "backend2/internal/address/handler"
 	clientDao "backend2/internal/client/dao"
 	cliDb "backend2/internal/client/db"
-	modelClient "backend2/internal/client/dto"
-	"backend2/internal/client/handler"
+	clientModel "backend2/internal/client/dto"
+	clientHandler "backend2/internal/client/handler"
 	"backend2/internal/config"
+	supplierDAO "backend2/internal/supplier/dao"
+	supplierDb "backend2/internal/supplier/db"
+	supplierModel "backend2/internal/supplier/dto"
+	supplierHandler "backend2/internal/supplier/handler"
 	"backend2/pkg/db/postgresql"
 	"backend2/pkg/logging"
 	"context"
@@ -37,8 +41,7 @@ func main() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
-	//handlers
-	logger.Infof("create requests handler")
+	//context creation
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -49,34 +52,12 @@ func main() {
 	}
 	defer cli.Close()
 
-	logger.Infof("create AddressDTO table")
-	err = postgresql.CreateTable(modelAddress.AddressTableQuery, ctx, cli, logger)
+	err = createTables(ctx, cli, logger)
 	if err != nil {
 		return
 	}
 
-	logger.Infof("create AddressDTO Service")
-	addrDAO := addrDao.NewAddressDAO(cli, logger)
-	addRepo := addrDb.NewAddressRepository(addrDAO)
-
-	logger.Infof("create AddressDTO Handler")
-	addrHandler := addrhandler.NewAddressHandler(logger, addRepo, ctx)
-	addrHandler.Register(router)
-
-	logger.Infof("create ClientDTO table")
-	err = postgresql.CreateTable(modelClient.ClientTableQuery, ctx, cli, logger)
-	if err != nil {
-		return
-	}
-
-	logger.Infof("create ClientDTO Service")
-	clientDAO := clientDao.NewClientDAO(cli, logger)
-	logger.Infof("create ClientDTO Repository")
-	clientRepo := cliDb.NewClientRepository(clientDAO)
-
-	logger.Infof("create ClientDTO Handler")
-	clientHandler := handler.NewClientHandler(logger, clientRepo, ctx)
-	clientHandler.Register(router)
+	initializeRouter(logger, cli, ctx, router)
 
 	logger.Infof("start server")
 	newServer.Start(cfg, router, ctx)
@@ -93,4 +74,51 @@ func connection(ctx context.Context, cfg *config.Config, logger *logging.Logger)
 	}
 	logger.Infof("connection to %s is established", cfg.Storage.Database)
 	return cli, nil
+}
+
+func createTables(ctx context.Context, cli *pgxpool.Pool, logger *logging.Logger) error {
+	logger.Infof("create AddressDTO table")
+	err := postgresql.CreateTable(addrModel.AddressTableQuery, ctx, cli, logger)
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("create ClientDTO table")
+	err = postgresql.CreateTable(clientModel.ClientTableQuery, ctx, cli, logger)
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("create Supplier table")
+	err = postgresql.CreateTable(supplierModel.SupplierTableQuery, ctx, cli, logger)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initializeRouter(logger *logging.Logger, cli *pgxpool.Pool, ctx context.Context, router *httprouter.Router) {
+	logger.Infof("create Address Service")
+	addrDAO := addrDao.NewAddressDAO(cli, logger)
+	logger.Infof("create Address Repository")
+	addRepo := addrDb.NewAddressRepository(addrDAO)
+	logger.Infof("create Address Handler")
+	addrHandler := addrhandler.NewAddressHandler(logger, addRepo, ctx)
+	addrHandler.Register(router)
+
+	logger.Infof("create Client Service")
+	clientDAO := clientDao.NewClientDAO(cli, logger)
+	logger.Infof("create Client Repository")
+	clientRepo := cliDb.NewClientRepository(clientDAO)
+	logger.Infof("create Client Handler")
+	clHandler := clientHandler.NewClientHandler(logger, clientRepo, ctx)
+	clHandler.Register(router)
+
+	logger.Infof("create Supplier Service")
+	supplierDAO := supplierDAO.NewSupplierDAO(cli, logger)
+	logger.Infof("create Supplier Repository")
+	supplierRepo := supplierDb.NewSupplierRepository(supplierDAO)
+	logger.Infof("create Supplier Handler")
+	supplHandler := supplierHandler.NewSupplierHandler(logger, supplierRepo, ctx)
+	supplHandler.Register(router)
 }
