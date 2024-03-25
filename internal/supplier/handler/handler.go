@@ -6,7 +6,6 @@ import (
 	"backend2/internal/handlers"
 	"backend2/internal/supplier/db"
 	"backend2/internal/supplier/dto"
-	"backend2/pkg/logging"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -20,16 +19,14 @@ const (
 )
 
 type supplierHandler struct {
-	logger *logging.Logger
-	repo   *db.SupplierRepository
-	ctx    context.Context
+	repo *db.SupplierRepository
+	ctx  context.Context
 }
 
-func NewSupplierHandler(logger *logging.Logger, repo *db.SupplierRepository, ctx context.Context) handlers.Handler {
+func NewSupplierHandler(repo *db.SupplierRepository, ctx context.Context) handlers.Handler {
 	return &supplierHandler{
-		logger: logger,
-		repo:   repo,
-		ctx:    ctx,
+		repo: repo,
+		ctx:  ctx,
 	}
 }
 
@@ -42,8 +39,6 @@ func (s *supplierHandler) Register(r *httprouter.Router) {
 }
 
 func (s *supplierHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func GetAll")
-
 	all, err := s.repo.FindAll(s.ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -63,8 +58,6 @@ func (s *supplierHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *supplierHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func GetAll")
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -83,8 +76,6 @@ func (s *supplierHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *supplierHandler) Create(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func Create")
-
 	var newSupplier dto.SupplierDTO
 	err := json.NewDecoder(r.Body).Decode(&newSupplier)
 	if err != nil {
@@ -98,14 +89,11 @@ func (s *supplierHandler) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	return nil
 }
 
 func (s *supplierHandler) Update(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func Update")
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -125,14 +113,11 @@ func (s *supplierHandler) Update(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func (s *supplierHandler) Delete(w http.ResponseWriter, r *http.Request) error {
-	s.logger.Tracef("func Delete")
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -145,7 +130,6 @@ func (s *supplierHandler) Delete(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
 	return nil
 }

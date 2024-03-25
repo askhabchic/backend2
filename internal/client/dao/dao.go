@@ -80,9 +80,8 @@ func (dao *ClientDAO) FindOne(ctx context.Context, name, surname string) (*dto.C
 	return &cl, nil
 }
 
-// TODO debug
 func (dao *ClientDAO) Update(ctx context.Context, id string, addr *model2.AddressDTO) error {
-	var existedID string //TODO it's maybe problem
+	var existedID string
 	querySelect := `SELECT id FROM address WHERE city = $1 AND street = $2`
 	dao.logger.Tracef("SQL Query: %s", model2.AddressInsertionQuery)
 	err := dao.db.QueryRow(ctx, querySelect, addr.City, addr.Street).Scan(&existedID)
@@ -115,8 +114,8 @@ func (dao *ClientDAO) Delete(ctx context.Context, id string) error {
 	q := `DELETE FROM client WHERE id = $1`
 	dao.logger.Tracef("SQL Query: %s", q)
 
-	rows, err := dao.db.Query(ctx, q, id)
-	if err != nil && errors.Is(err, rows.Err()) {
+	_, err := dao.db.Query(ctx, q, id)
+	if err != nil {
 		return err
 	}
 	return nil

@@ -9,6 +9,7 @@ import (
 	"backend2/pkg/logging"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -35,7 +36,7 @@ func NewClientHandler(logger *logging.Logger, repo *db.ClientRepository, ctx con
 func (h *clientHandler) Register(r *httprouter.Router) {
 	r.HandlerFunc(http.MethodGet, clientsURL, customerror.Middleware(h.GetAll))
 	r.HandlerFunc(http.MethodGet, clientURL, customerror.Middleware(h.GetOne))
-	r.HandlerFunc(http.MethodPost, clientsURL, customerror.Middleware(h.Create))
+	r.HandlerFunc(http.MethodPost, clientURL, customerror.Middleware(h.Create))
 	r.HandlerFunc(http.MethodPut, clientURL, customerror.Middleware(h.Update))
 	r.HandlerFunc(http.MethodDelete, clientURL, customerror.Middleware(h.Delete))
 }
@@ -43,7 +44,6 @@ func (h *clientHandler) Register(r *httprouter.Router) {
 //TODO check all if/return/error and duplication of code
 
 func (h *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
-	h.logger.Trace("func GetAll")
 	limit := r.URL.Query().Get("limit")
 	offset := r.URL.Query().Get("offset")
 
@@ -66,11 +66,12 @@ func (h *clientHandler) GetAll(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *clientHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
-	h.logger.Trace("func GetByID")
 	name := r.URL.Query().Get("name")
 	surname := r.URL.Query().Get("surname")
-
-	w.Header().Set("Content-Type", "application/json")
+	if name == "" || surname == "" {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return fmt.Errorf("%d Invalid request body", http.StatusBadRequest)
+	}
 
 	client, err := h.repo.FindOne(h.ctx, name, surname)
 	if err != nil {
@@ -78,13 +79,12 @@ func (h *clientHandler) GetOne(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(client)
 	return nil
 }
 
 func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
-	h.logger.Trace("func Create")
-
 	var newClient dto.ClientDTO
 	err := json.NewDecoder(r.Body).Decode(&newClient)
 	if err != nil {
@@ -103,8 +103,6 @@ func (h *clientHandler) Create(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
-	h.logger.Trace("func Update")
-
 	id := r.URL.Query().Get("id")
 	var address addrModel.AddressDTO
 	err := json.NewDecoder(r.Body).Decode(&address)
@@ -123,7 +121,6 @@ func (h *clientHandler) Update(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (h *clientHandler) Delete(w http.ResponseWriter, r *http.Request) error {
-	h.logger.Trace("func Delete")
 	w.Header().Set("Content-Type", "application/json")
 	id := r.FormValue("id")
 

@@ -119,6 +119,6 @@ func initializeRouter(logger *logging.Logger, cli *pgxpool.Pool, ctx context.Con
 	logger.Infof("create Supplier Repository")
 	supplierRepo := supplierDb.NewSupplierRepository(supplierDAO)
 	logger.Infof("create Supplier Handler")
-	supplHandler := supplierHandler.NewSupplierHandler(logger, supplierRepo, ctx)
+	supplHandler := supplierHandler.NewSupplierHandler(supplierRepo, ctx)
 	supplHandler.Register(router)
 }
