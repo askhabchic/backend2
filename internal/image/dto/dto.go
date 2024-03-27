@@ -2,7 +2,7 @@ package dto
 
 import "github.com/gofrs/uuid"
 
-type CreateImageDTO struct {
+type ImageDTO struct {
 	ID    uuid.UUID `json:"id"`
 	Image string    `json:"image"`
 }
